@@ -2,15 +2,15 @@
 
 namespace App\Services\AI\Strategies;
 
-use App\Services\AI\Contracts\OpponentStrategy;
+use App\Services\AI\Contracts\EstrategiaOponente;
 use App\Models\Board;
 
-class RandomStrategy implements OpponentStrategy
+class EstrategiaAleatoria implements EstrategiaOponente
 {
-    public function chooseTarget(Board $playerBoard): array
+    public function escolherAlvo(Board $playerBoard): array
     {
         // Recupera todos os tiros já dados
-        $existingShots = $playerBoard->shots()->get(['x', 'y']);
+    $existingShots = $playerBoard->shots()->get(['x', 'y']);
 
         // Cria um mapa de coordenadas ocupadas "1-2" => true
         $occupied = [];

@@ -2,12 +2,12 @@
 
 namespace App\Services\AI\Strategies;
 
-use App\Services\AI\Contracts\OpponentStrategy;
+use App\Services\AI\Contracts\EstrategiaOponente;
 use App\Models\Board;
 
-class HunterStrategy implements OpponentStrategy
+class EstrategiaCacador implements EstrategiaOponente
 {
-    public function chooseTarget(Board $playerBoard): array
+    public function escolherAlvo(Board $playerBoard): array
     {
         // BUSCA INTELIGENTE:
         // Pega o último tiro que foi um ACERTO (is_hit),
@@ -32,7 +32,7 @@ class HunterStrategy implements OpponentStrategy
         }
 
         // Se não há navios feridos pendentes, modo Aleatório
-        return (new RandomStrategy())->chooseTarget($playerBoard);
+        return (new EstrategiaAleatoria())->escolherAlvo($playerBoard);
     }
     
     /**
@@ -61,6 +61,6 @@ class HunterStrategy implements OpponentStrategy
         }
 
         // Fallback para aleatório caso não haja vizinhos válidos
-        return (new RandomStrategy())->chooseTarget($playerBoard);
+        return (new EstrategiaAleatoria())->escolherAlvo($playerBoard);
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\AI\Strategies\HunterStrategy;
+use App\Services\AI\Strategies\EstrategiaCacador;
 
 it('targets a neighbor of a recent hit that did not sink the ship', function () {
     // Cria um "tiro" que representa um acerto em (4,4)
@@ -48,8 +48,8 @@ it('targets a neighbor of a recent hit that did not sink the ship', function () 
         }
     };
 
-    $strategy = new HunterStrategy();
-    $result = $strategy->chooseTarget($board);
+    $strategy = new EstrategiaCacador();
+    $result = $strategy->escolherAlvo($board);
 
     // Deve ser um vizinho de (4,4)
     $dx = abs($result['x'] - 4);

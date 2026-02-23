@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\AI\Strategies\RandomStrategy;
+use App\Services\AI\Strategies\EstrategiaAleatoria;
 use Illuminate\Support\Collection;
 
 // Testa que, quando todas as posições exceto uma estão ocupadas, o RandomStrategy devolve a posição livre
@@ -40,8 +40,8 @@ it('returns the only available cell when all others are occupied', function () {
         }
     };
 
-    $strategy = new RandomStrategy();
-    $result = $strategy->chooseTarget($board);
+    $strategy = new EstrategiaAleatoria();
+    $result = $strategy->escolherAlvo($board);
 
     expect($result)->toBeArray();
     expect($result['x'])->toBe(5);

@@ -2,9 +2,9 @@
 
 namespace App\Services\AI;
 
-use App\Services\AI\Strategies\RandomStrategy;
-use App\Services\AI\Strategies\HunterStrategy;
-use App\Services\AI\Strategies\ProbabilisticStrategy;
+use App\Services\AI\Strategies\EstrategiaAleatoria;
+use App\Services\AI\Strategies\EstrategiaCacador;
+use App\Services\AI\Strategies\EstrategiaProbabilistica;
 
 /**
  * Serviço simples que seleciona a estratégia de IA com base na dificuldade do jogo.
@@ -18,17 +18,16 @@ class AISelector
      * @param mixed $game Objeto que contém `difficulty` e `playerBoard`.
      * @return array ['x' => int, 'y' => int]
      */
-    public function playTurn($game): array
+    public function jogarTurno($game): array
     {
         $difficulty = $game->difficulty ?? 'basic';
-
         $strategy = match ($difficulty) {
-            'basic' => new RandomStrategy(),
-            'intermediate' => new HunterStrategy(),
-            'advanced' => new ProbabilisticStrategy(),
-            default => new RandomStrategy(),
+            'basic' => new EstrategiaAleatoria(),
+            'intermediate' => new EstrategiaCacador(),
+            'advanced' => new EstrategiaProbabilistica(),
+            default => new EstrategiaAleatoria(),
         };
 
-        return $strategy->chooseTarget($game->playerBoard);
+        return $strategy->escolherAlvo($game->playerBoard);
     }
 }
