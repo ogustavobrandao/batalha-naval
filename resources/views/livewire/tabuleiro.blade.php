@@ -12,33 +12,39 @@
         /* Corrigido: overflow visible para os navios 3D não serem cortados */
         .grid-cell {
             border: 1px solid rgba(19, 127, 236, 0.1);
-            transform-style: preserve-3d;
-            position: relative;
+            transform-style: flat;
+            position: relative !important;
             aspect-ratio: 1/1;
             overflow: visible !important;
         }
 
         /* BLOCOS 3D */
         .ship-block {
-            background: var(--ship-color) !important;
-            transform: translateZ(20px);
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        .ship-block::before {
-            content: ''; position: absolute; top: 0; left: 100%; width: 20px; height: 100%;
-            background: var(--ship-color); filter: brightness(0.7);
-            transform-origin: left; transform: rotateY(90deg);
-        }
-        .ship-block::after {
-            content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px;
-            background: var(--ship-color); filter: brightness(0.5);
-            transform-origin: top; transform: rotateX(-90deg);
-        }
+    background: var(--ship-color) !important;
+    transform: translateZ(20px);
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+.ship-block::before {
+    content: ''; position: absolute; top: 0; left: 100%; width: 20px; height: 100%;
+    background: var(--ship-color); filter: brightness(0.7);
+    transform-origin: left; transform: rotateY(90deg);
+}
+.ship-block::after {
+    content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px;
+    background: var(--ship-color); filter: brightness(0.5);
+    transform-origin: top; transform: rotateX(-90deg);
+}
+
+.ship-block > div {
+    position: absolute;
+    inset: 0;
+    z-index: 999;
+}
 
         /* ESTADOS DE COMBATE */
-        .cell-hit { background: #ef4444 !important; box-shadow: 0 0 15px #ef4444; }
+        .cell-hit  { background: rgba(239, 68, 68, 0.55) !important; box-shadow: 0 0 15px #ef4444; }
         .cell-miss { background: rgba(255, 255, 255, 0.1) !important; }
-        .cell-sunk { background: #1e293b !important; opacity: 0.8; }
+        .cell-sunk { background: rgba(15, 23, 42, 0.85) !important; opacity: 0.6; }
 
         /* SETA DIRECIONAL */
         .direction-arrow {
@@ -121,21 +127,30 @@
     @if($fase === 'posicionamento')
         <div class="relative w-[550px] h-[550px] isometric-board grid grid-cols-10 grid-rows-10 bg-[#121a21]/95 p-3 border border-white/10 shadow-2xl">
                     @foreach($meuTabuleiro as $r => $linha)
-                        @foreach($linha as $c => $celula)
-                            {{-- wire:key é vital para o Livewire não perder a posição no grid --}}
-                            <div wire:key="pos-{{ $r }}-{{ $c }}"
-                                 wire:click="clicarCelula({{ $r }}, {{ $c }})"
-                                 style="--ship-color: {{ $celula['cor'] ?? 'transparent' }}; z-index: {{ $r + $c }};"
-                                 class="grid-cell {{ isset($celula['ship_id']) ? 'ship-block cursor-alias' : 'hover:bg-[#137fec]/10 cursor-pointer' }} group">
+    @foreach($linha as $c => $celula)
+        <div wire:key="pos-{{ $r }}-{{ $c }}"
+             wire:click="clicarCelula({{ $r }}, {{ $c }})"
+             style="--ship-color: {{ $celula['cor'] ?? 'transparent' }}; color: {{ $celula['cor'] ?? 'transparent' }}; z-index: {{ $r + $c }}; position: relative;"
+class="grid-cell {{ isset($celula['ship_id']) ? 'ship-block cursor-alias' : 'hover:bg-[#137fec]/10 cursor-pointer' }} group">
 
-                                 @if($navioSelecionado && !isset($celula['navio']))
-                                    <div class="direction-arrow opacity-0 group-hover:opacity-100">
-                                        <span class="material-symbols-outlined arrow-icon">arrow_upward</span>
-                                    </div>
-                                 @endif
-                            </div>
-                        @endforeach
-                    @endforeach
+            @if(isset($celula['ship_id']))
+                @include('partials.navio-segmento', [
+                    'tipo'    => $celula['navio'],
+                    'parte'   => $celula['parte'] ?? 0,
+                    'tamanho' => $celula['tamanho'] ?? 1,
+                    'direcao' => $celula['direcao'] ?? 0,
+                    'status'  => $celula['status'],
+                ])
+            @endif
+
+            @if($navioSelecionado && !isset($celula['navio']))
+                <div class="direction-arrow opacity-0 group-hover:opacity-100">
+                    <span class="material-symbols-outlined arrow-icon">arrow_upward</span>
+                </div>
+            @endif
+        </div>
+        @endforeach
+    @endforeach
                 </div>
             @else
                 {{-- FASE DE BATALHA --}}
@@ -145,16 +160,32 @@
                         <h3 class="text-blue-400 font-bold uppercase tracking-widest text-xs">Radar Amigo</h3>
                         <div class="grid grid-cols-10 w-[420px] h-[420px] bg-black/40 p-1 border border-blue-500/20">
                             @foreach($meuTabuleiro as $r => $linha)
-                                @foreach($linha as $c => $celula)
-                                    <div wire:key="meu-{{ $r }}-{{ $c }}"
-                                         class="grid-cell
-                                        {{ $celula['status'] === 'acerto' ? 'cell-hit' : '' }}
-                                        {{ $celula['status'] === 'erro' ? 'cell-miss' : '' }}
-                                        {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}"
-                                        style="background: {{ ($celula['status'] === 'posicionado') ? $celula['cor'] : 'transparent' }}">
-                                    </div>
-                                @endforeach
-                            @endforeach
+                        @foreach($linha as $c => $celula)
+                            <div wire:key="meu-{{ $r }}-{{ $c }}"
+                                style="color: {{ $celula['cor'] ?? 'transparent' }};"
+                                class="grid-cell
+                                {{ $celula['status'] === 'acerto'  ? 'cell-hit'  : '' }}
+                                {{ $celula['status'] === 'erro'     ? 'cell-miss' : '' }}
+                                {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}">
+
+                                @if(isset($celula['ship_id']) && in_array($celula['status'], ['posicionado','acerto','afundado']))
+                                    @include('partials.navio-segmento', [
+                                        'tipo'    => $celula['navio'],
+                                        'parte'   => $celula['parte'] ?? 0,
+                                        'tamanho' => $celula['tamanho'] ?? 1,
+                                        'direcao' => $celula['direcao'] ?? 0,
+                                        'status'  => $celula['status'],
+                                    ])
+                                @endif
+
+                                @if($celula['status'] === 'acerto')
+                                    <span class="absolute inset-0 flex items-center justify-center z-20">
+                                        <span class="material-symbols-outlined text-white text-base drop-shadow-lg">local_fire_department</span>
+                                    </span>
+                                @endif
+                            </div>
+                        @endforeach
+                    @endforeach
                         </div>
                     </div>
 
@@ -165,15 +196,28 @@
                             @foreach($tabuleiroOponente as $r => $linha)
                                 @foreach($linha as $c => $celula)
                                     <div wire:key="op-{{ $r }}-{{ $c }}"
-                                         wire:click="atirar({{ $r }}, {{ $c }})"
-                                         class="grid-cell cursor-crosshair hover:bg-red-500/10
-                                         {{ $celula['status'] === 'acerto' ? 'cell-hit' : '' }}
-                                         {{ $celula['status'] === 'erro' ? 'cell-miss' : '' }}
-                                         {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}">
+                                        wire:click="atirar({{ $r }}, {{ $c }})"
+                                        style="color: {{ $celula['cor'] ?? 'transparent' }};"
+                                        class="grid-cell cursor-crosshair hover:bg-red-500/10
+                                        {{ $celula['status'] === 'acerto'  ? 'cell-hit'  : '' }}
+                                        {{ $celula['status'] === 'erro'     ? 'cell-miss' : '' }}
+                                        {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}">
 
-                                         @if($celula['status'] === 'acerto' || $celula['status'] === 'afundado')
-                                            <span class="material-symbols-outlined text-white text-xs flex justify-center mt-2">close</span>
-                                         @endif
+                                        @if(isset($celula['ship_id']) && in_array($celula['status'], ['acerto','afundado']))
+                                            @include('partials.navio-segmento', [
+                                                'tipo'    => $celula['navio'],
+                                                'parte'   => $celula['parte'] ?? 0,
+                                                'tamanho' => $celula['tamanho'] ?? 1,
+                                                'direcao' => $celula['direcao'] ?? 0,
+                                                'status'  => $celula['status'],
+                                            ])
+                                        @endif
+
+                                        @if($celula['status'] === 'acerto')
+                                            <span class="absolute inset-0 flex items-center justify-center z-20">
+                                                <span class="material-symbols-outlined text-white text-base drop-shadow-lg">local_fire_department</span>
+                                            </span>
+                                        @endif
                                     </div>
                                 @endforeach
                             @endforeach
