@@ -4,24 +4,24 @@
 
     <style>
         .font-display { font-family: 'Space Grotesk', sans-serif; }
-        .isometric-board { 
-            transform: perspective(1200px) rotateX(60deg) rotateZ({{ $anguloRadar }}deg); 
+        .isometric-board {
+            transform: perspective(1200px) rotateX(60deg) rotateZ({{ $anguloRadar }}deg);
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
         /* Corrigido: overflow visible para os navios 3D não serem cortados */
-        .grid-cell { 
-            border: 1px solid rgba(19, 127, 236, 0.1); 
-            transform-style: preserve-3d; 
-            position: relative; 
-            aspect-ratio: 1/1; 
-            overflow: visible !important; 
+        .grid-cell {
+            border: 1px solid rgba(19, 127, 236, 0.1);
+            transform-style: preserve-3d;
+            position: relative;
+            aspect-ratio: 1/1;
+            overflow: visible !important;
         }
 
         /* BLOCOS 3D */
         .ship-block {
             background: var(--ship-color) !important;
-            transform: translateZ(20px); 
+            transform: translateZ(20px);
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         .ship-block::before {
@@ -67,16 +67,67 @@
 
     <main class="flex-1 flex overflow-hidden">
         <div class="flex-1 relative flex items-center justify-center p-20 bg-[radial-gradient(circle_at_center,_#137fec10_0%,_transparent_75%)]">
-            @if($fase === 'posicionamento')
-                <div class="relative w-[550px] h-[550px] isometric-board grid grid-cols-10 grid-rows-10 bg-[#121a21]/95 p-3 border border-white/10 shadow-2xl">
+            @if($fase === 'finalizada')
+        <div class="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="flex flex-col items-center gap-8 rounded-3xl border border-white/10 bg-[#0a0f14] p-16 text-center shadow-2xl max-w-lg w-full mx-4">
+
+                @php $ranking = \App\Models\Ranking::where('partida_id', $partida->id)->where('user_id', auth()->id())->latest()->first(); @endphp
+
+                @if($ranking && $ranking->venceu)
+                    <span class="material-symbols-outlined text-8xl text-yellow-400 animate-bounce">military_tech</span>
+                    <h2 class="text-5xl font-black uppercase italic tracking-tighter text-yellow-400">Vitória!</h2>
+                    <p class="text-white/50 text-sm">A frota inimiga foi completamente destruída.</p>
+                @else
+                    <span class="material-symbols-outlined text-8xl text-red-500">skull</span>
+                    <h2 class="text-5xl font-black uppercase italic tracking-tighter text-red-500">Derrota</h2>
+                    <p class="text-white/50 text-sm">Sua frota foi afundada pelo inimigo.</p>
+                @endif
+
+                @if($ranking)
+                <div class="grid grid-cols-2 gap-4 w-full mt-2">
+                    <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+                        <p class="text-white/40 text-xs uppercase tracking-widest">Pontuação</p>
+                        <p class="text-3xl font-black text-white mt-1">{{ number_format($ranking->pontuacao) }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+                        <p class="text-white/40 text-xs uppercase tracking-widest">Precisão</p>
+                        <p class="text-3xl font-black text-white mt-1">{{ $ranking->precisao }}%</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+                        <p class="text-white/40 text-xs uppercase tracking-widest">Tiros</p>
+                        <p class="text-3xl font-black text-white mt-1">{{ $ranking->tiros_dados }}</p>
+                    </div>
+                    <div class="rounded-2xl bg-white/5 p-4 border border-white/10">
+                        <p class="text-white/40 text-xs uppercase tracking-widest">Tempo</p>
+                        <p class="text-3xl font-black text-white mt-1">{{ gmdate('i:s', $ranking->tempo_segundos) }}</p>
+                    </div>
+                </div>
+                @endif
+
+                <div class="flex gap-4 w-full mt-2">
+                    <a href="{{ route('ranking.index') }}"
+                       class="flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all text-center">
+                        Ver Ranking
+                    </a>
+                    <a href="{{ route('dashboard') }}"
+                       class="flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-sm bg-[#137fec] text-white hover:bg-[#137fec]/80 transition-all shadow-[0_0_30px_#137fec50] text-center">
+                        Menu Principal
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($fase === 'posicionamento')
+        <div class="relative w-[550px] h-[550px] isometric-board grid grid-cols-10 grid-rows-10 bg-[#121a21]/95 p-3 border border-white/10 shadow-2xl">
                     @foreach($meuTabuleiro as $r => $linha)
                         @foreach($linha as $c => $celula)
                             {{-- wire:key é vital para o Livewire não perder a posição no grid --}}
                             <div wire:key="pos-{{ $r }}-{{ $c }}"
-                                 wire:click="clicarCelula({{ $r }}, {{ $c }})" 
+                                 wire:click="clicarCelula({{ $r }}, {{ $c }})"
                                  style="--ship-color: {{ $celula['cor'] ?? 'transparent' }}; z-index: {{ $r + $c }};"
                                  class="grid-cell {{ isset($celula['ship_id']) ? 'ship-block cursor-alias' : 'hover:bg-[#137fec]/10 cursor-pointer' }} group">
-                                 
+
                                  @if($navioSelecionado && !isset($celula['navio']))
                                     <div class="direction-arrow opacity-0 group-hover:opacity-100">
                                         <span class="material-symbols-outlined arrow-icon">arrow_upward</span>
@@ -96,7 +147,7 @@
                             @foreach($meuTabuleiro as $r => $linha)
                                 @foreach($linha as $c => $celula)
                                     <div wire:key="meu-{{ $r }}-{{ $c }}"
-                                         class="grid-cell 
+                                         class="grid-cell
                                         {{ $celula['status'] === 'acerto' ? 'cell-hit' : '' }}
                                         {{ $celula['status'] === 'erro' ? 'cell-miss' : '' }}
                                         {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}"
@@ -114,12 +165,12 @@
                             @foreach($tabuleiroOponente as $r => $linha)
                                 @foreach($linha as $c => $celula)
                                     <div wire:key="op-{{ $r }}-{{ $c }}"
-                                         wire:click="atirar({{ $r }}, {{ $c }})" 
-                                         class="grid-cell cursor-crosshair hover:bg-red-500/10 
+                                         wire:click="atirar({{ $r }}, {{ $c }})"
+                                         class="grid-cell cursor-crosshair hover:bg-red-500/10
                                          {{ $celula['status'] === 'acerto' ? 'cell-hit' : '' }}
                                          {{ $celula['status'] === 'erro' ? 'cell-miss' : '' }}
                                          {{ $celula['status'] === 'afundado' ? 'cell-sunk' : '' }}">
-                                         
+
                                          @if($celula['status'] === 'acerto' || $celula['status'] === 'afundado')
                                             <span class="material-symbols-outlined text-white text-xs flex justify-center mt-2">close</span>
                                          @endif
@@ -137,14 +188,14 @@
             @if($fase === 'posicionamento')
                 <div class="flex flex-col gap-4">
                     @foreach($naviosDisponiveis as $chave => $dadosNavio)
-                    <div wire:click="selecionarNavio('{{ $chave }}')" 
-                         class="group relative flex items-center gap-6 p-6 rounded-3xl border transition-all cursor-pointer 
+                    <div wire:click="selecionarNavio('{{ $chave }}')"
+                         class="group relative flex items-center gap-6 p-6 rounded-3xl border transition-all cursor-pointer
                          {{ $navioSelecionado === $chave ? 'border-[#137fec] bg-[#137fec]/10' : ($statusFrota[$chave] == 0 ? 'opacity-20 grayscale' : 'bg-white/5 border-transparent hover:border-white/10') }}">
-                        
+
                         <div class="w-14 h-14 flex items-center justify-center rounded-2xl" style="background: {{ $dadosNavio['cor'] }}">
                             <span class="material-symbols-outlined text-white text-3xl font-bold">directions_boat</span>
                         </div>
-                        
+
                         <div class="flex-1">
                             <p class="font-bold text-xl uppercase tracking-tighter">{{ $dadosNavio['nome'] }}</p>
                             <p class="text-white/40 text-[10px] font-black uppercase mt-1">Disponíveis: {{ $statusFrota[$chave] }}</p>
@@ -169,7 +220,7 @@
                     <span class="material-symbols-outlined text-6xl text-red-500 animate-pulse">target</span>
                     <h4 class="text-2xl font-black uppercase italic">Combate Ativo</h4>
                     <p class="text-white/40 text-sm mt-2 max-w-[250px]">Selecione as coordenadas no radar inimigo para disparar.</p>
-                    
+
                     {{-- Botão de desistência ou retorno se necessário --}}
                 </div>
             @endif

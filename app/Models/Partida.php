@@ -12,6 +12,10 @@ class Partida extends Model
 
     protected $fillable = ['modo', 'dificuldade', 'status', 'criado_por', 'started_at', 'user_id'];
 
+    protected $casts = [
+        'started_at' => 'datetime',
+    ];
+
     public function user()
     {
         // return $this->belongsToMany(User::class, 'partida_user', 'user_id');

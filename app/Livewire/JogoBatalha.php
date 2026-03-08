@@ -15,12 +15,12 @@ class JogoBatalha extends Component
     public array $tabuleiroOponente = [];
     public string $fase = 'posicionamento';
     public $navioSelecionado = null;
-    
+
     // Controles de Visão e Direção
     public int $direcaoNavio = 0; // 0: Leste, 1: Sul, 2: Oeste, 3: Norte
     public int $anguloRadar = -45;
     public array $statusFrota = [];
-    
+
     // Configuração da frota (Baseado no PDF do projeto)
     public array $naviosDisponiveis = [
         'porta_avioes' => ['nome' => 'Porta-aviões', 'tamanho' => 6, 'qtd' => 2, 'cor' => '#6366f1'],
@@ -70,18 +70,18 @@ class JogoBatalha extends Component
 
     // --- INTERAÇÃO ---
 
-    public function girarRadar() 
-    { 
-        $this->anguloRadar += 90; 
+    public function girarRadar()
+    {
+        $this->anguloRadar += 90;
     }
 
-    public function girarNavio() 
-    { 
-        $this->direcaoNavio = ($this->direcaoNavio + 1) % 4; 
+    public function girarNavio()
+    {
+        $this->direcaoNavio = ($this->direcaoNavio + 1) % 4;
     }
 
-    public function selecionarNavio($tipo) 
-    { 
+    public function selecionarNavio($tipo)
+    {
         if ($this->statusFrota[$tipo] > 0) {
             $this->navioSelecionado = $tipo;
         }
@@ -114,7 +114,7 @@ class JogoBatalha extends Component
 
         // Calcula ocupação baseada na direção
         for ($i = 0; $i < $tamanho; $i++) {
-            $linhaAtual = $r; 
+            $linhaAtual = $r;
             $colunaAtual = $c;
 
             if ($this->direcaoNavio === 0) $colunaAtual += $i;      // Leste
@@ -132,8 +132,8 @@ class JogoBatalha extends Component
         // Aplica o posicionamento
         foreach ($coordenadas as $coord) {
             $this->meuTabuleiro[$coord[0]][$coord[1]] = [
-                'status' => 'posicionado', 
-                'navio' => $this->navioSelecionado, 
+                'status' => 'posicionado',
+                'navio' => $this->navioSelecionado,
                 'ship_id' => $idNavio,
                 'cor' => $this->naviosDisponiveis[$this->navioSelecionado]['cor']
             ];
@@ -164,7 +164,7 @@ class JogoBatalha extends Component
         if ($this->fase !== 'batalha') return;
 
         $tabuleiroIA = Tabuleiro::where('partida_id', $this->partida->id)->whereNull('user_id')->first();
-        
+
         // Impede atirar no mesmo lugar duas vezes
         if ($this->tabuleiroOponente[$r][$c]['status'] !== 'agua') return;
 
@@ -181,9 +181,9 @@ class JogoBatalha extends Component
         $tabuleiroJogador = Tabuleiro::where('partida_id', $this->partida->id)
             ->where('user_id', Auth::id())
             ->first();
-            
+
         $dadosJogo = (object)[
-            'difficulty' => $this->partida->dificuldade, 
+            'difficulty' => $this->partida->dificuldade,
             'playerBoard' => $tabuleiroJogador
         ];
 
@@ -217,7 +217,7 @@ class JogoBatalha extends Component
         $board->update(['tabuleiro_grid' => $grid]);
         $this->carregarTabuleiros();
         $this->verificarVitoria();
-        
+
         return $foiAcerto;
     }
 
@@ -246,11 +246,15 @@ class JogoBatalha extends Component
 
     private function verificarVitoria()
     {
-        if ($this->todosAfundados($this->tabuleiroOponente) || $this->todosAfundados($this->meuTabuleiro)) {
+        $jogadorVenceu = $this->todosAfundados($this->tabuleiroOponente);
+        $iaVenceu      = $this->todosAfundados($this->meuTabuleiro);
+
+        if ($jogadorVenceu || $iaVenceu) {
             $this->partida->update([
-                'status' => 'finalizada', 
-                'finished_at' => now()
+                'status'      => 'finalizada',
+                'finished_at' => now(),
             ]);
+            $this->calcularERegistrarRanking($jogadorVenceu);
             $this->fase = 'finalizada';
         }
     }
@@ -286,23 +290,23 @@ class JogoBatalha extends Component
             for ($q = 0; $q < $config['qtd']; $q++) {
                 $posicionado = false;
                 while (!$posicionado) {
-                    $r = rand(0, 9); 
-                    $c = rand(0, 9); 
+                    $r = rand(0, 9);
+                    $c = rand(0, 9);
                     $dir = rand(0, 3);
 
                     if ($this->validarPosicaoIA($grid, $r, $c, $config['tamanho'], $dir)) {
                         $idNavio = uniqid($tipo.'_');
                         for ($i = 0; $i < $config['tamanho']; $i++) {
                             $nr = $r; $nc = $c;
-                            if($dir === 0) $nc += $i; 
-                            elseif($dir === 1) $nr += $i; 
-                            elseif($dir === 2) $nc -= $i; 
+                            if($dir === 0) $nc += $i;
+                            elseif($dir === 1) $nr += $i;
+                            elseif($dir === 2) $nc -= $i;
                             else $nr -= $i;
 
                             $grid[$nr][$nc] = [
-                                'status' => 'agua', 
-                                'navio' => $tipo, 
-                                'ship_id' => $idNavio, 
+                                'status' => 'agua',
+                                'navio' => $tipo,
+                                'ship_id' => $idNavio,
                                 'cor' => $config['cor']
                             ];
                         }
@@ -318,9 +322,9 @@ class JogoBatalha extends Component
     {
         for ($i = 0; $i < $tam; $i++) {
             $nr = $r; $nc = $c;
-            if($dir === 0) $nc += $i; 
-            elseif($dir === 1) $nr += $i; 
-            elseif($dir === 2) $nc -= $i; 
+            if($dir === 0) $nc += $i;
+            elseif($dir === 1) $nr += $i;
+            elseif($dir === 2) $nc -= $i;
             else $nr -= $i;
 
             if($nr < 0 || $nr > 9 || $nc < 0 || $nc > 9 || isset($grid[$nr][$nc]['ship_id'])) {
@@ -330,15 +334,62 @@ class JogoBatalha extends Component
         return true;
     }
 
-    private function salvarMeuTabuleiro() 
-    { 
+    private function salvarMeuTabuleiro()
+    {
         Tabuleiro::where('partida_id', $this->partida->id)
             ->where('user_id', Auth::id())
-            ->update(['tabuleiro_grid' => $this->meuTabuleiro]); 
+            ->update(['tabuleiro_grid' => $this->meuTabuleiro]);
     }
 
-    public function render() 
-    { 
-        return view('livewire.tabuleiro'); 
+    public function render()
+    {
+        return view('livewire.tabuleiro');
+    }
+
+    private function calcularERegistrarRanking(bool $venceu): void
+    {
+        $tabuleiroIA      = Tabuleiro::where('partida_id', $this->partida->id)->whereNull('user_id')->first();
+        $tabuleiroJogador = Tabuleiro::where('partida_id', $this->partida->id)->where('user_id', Auth::id())->first();
+
+        // Tiros que o JOGADOR deu (no tabuleiro da IA)
+        $tirosDados    = $tabuleiroIA->tiros()->count();
+        $acertos       = $tabuleiroIA->tiros()->where('foi_atingido', true)->count();
+        $naviosAfundados = $tabuleiroIA->tiros()->where('navio_afundado', true)->count();
+
+        // Tempo em segundos
+        $tempo = $this->partida->started_at
+            ? (int) $this->partida->started_at->diffInSeconds(now())
+            : 0;
+
+        // Cálculo de pontuação
+        $base = match($this->partida->dificuldade) {
+            'facil'  => 100,
+            'medio'  => 250,
+            'dificil'=> 500,
+            default  => 100,
+        };
+
+        $bonusPrecisao = $tirosDados > 0
+            ? (int) round(($acertos / $tirosDados) * 200)
+            : 0;
+
+        // Bônus de tempo: máx 300 pts, decresce com o tempo (1 pt perdido a cada 10s)
+        $bonusTempo = max(0, 300 - (int) floor($tempo / 10));
+
+        $bonusVitoria = $venceu ? 300 : 0;
+
+        $pontuacao = $base + $bonusPrecisao + $bonusTempo + $bonusVitoria;
+
+        \App\Models\Ranking::create([
+            'user_id'         => Auth::id(),
+            'partida_id'      => $this->partida->id,
+            'venceu'          => $venceu,
+            'dificuldade'     => $this->partida->dificuldade,
+            'tiros_dados'     => $tirosDados,
+            'acertos'         => $acertos,
+            'navios_afundados'=> $naviosAfundados,
+            'tempo_segundos'  => $tempo,
+            'pontuacao'       => $pontuacao,
+        ]);
     }
 }

@@ -1,59 +1,175 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# ⚓ Batalha Naval
 
-## About Laravel
+**Jogo de Batalha Naval online com IA, ranking e múltiplas dificuldades**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow?style=for-the-badge)
+![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)
+![Livewire](https://img.shields.io/badge/Livewire-3-4E56A6?style=for-the-badge&logo=livewire&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+</div>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📋 Sobre o Projeto
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Batalha Naval é uma aplicação web que recria o clássico jogo de tabuleiro de forma digital. O jogador posiciona sua frota estrategicamente e enfrenta uma **Inteligência Artificial** com comportamento adaptável conforme a dificuldade escolhida. Ao final de cada partida, uma pontuação é calculada com base na precisão, tempo e dificuldade, alimentando um **ranking global** entre os usuários.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+> Projeto desenvolvido como trabalho acadêmico no curso de Bacharelado em Ciência da Computação — UFAPE.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## ✨ Funcionalidades
 
-### Premium Partners
+- 🔐 **Autenticação** — Registro e login de usuários
+- 🚢 **Posicionamento de frota** — Interface drag-and-drop com rotação de navios em 4 direções
+- 🤖 **IA como oponente** — Comportamento ajustado por nível de dificuldade
+- 🎯 **Combate em tempo real** — Interface reativa com Livewire sem recarregar a página
+- 🏆 **Sistema de Ranking** — Pontuação baseada em dificuldade, precisão e tempo
+- 📊 **Histórico pessoal** — Acompanhe suas melhores partidas
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## 🛠️ Tecnologias
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Camada | Tecnologia |
+|--------|-----------|
+| Backend | PHP 8.2 + Laravel 12 |
+| Frontend Reativo | Livewire 3 |
+| Estilização | Tailwind CSS |
+| Banco de Dados | PostgreSQL |
+| Ambiente | Laragon/php serve |
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🚀 Como Rodar Localmente
 
-## Security Vulnerabilities
+### Pré-requisitos
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- PHP 8.2+
+- Composer
+- Node.js + NPM
+- PostgreSQL
+- Laragon (recomendado)
 
-## License
+### Passo a passo
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/batalha-naval.git
+cd batalha-naval
+
+# 2. Instale as dependências PHP
+composer install
+
+# 3. Instale as dependências JS
+npm install
+
+# 4. Configure o ambiente
+cp .env.example .env
+php artisan key:generate
+```
+
+Configure seu `.env` com as credenciais do banco:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=batalha_naval
+DB_USERNAME=seu_usuario
+DB_PASSWORD=sua_senha
+```
+
+```bash
+# 5. Execute as migrations
+php artisan migrate
+
+# 6. Compile os assets
+npm run dev
+
+# 7. Suba o servidor
+php -S 0.0.0.0:8000 -t public
+```
+
+Acesse: [http://localhost:8000](http://localhost:8000)
+
+---
+
+## 🎮 Como Jogar
+
+1. **Crie uma conta** ou faça login
+2. **Escolha a dificuldade** — Fácil, Médio ou Difícil
+3. **Posicione sua frota** no tabuleiro (clique para posicionar, clique no navio para remover, use o botão girar para mudar a direção)
+4. **Inicie a batalha** e ataque as células do tabuleiro inimigo
+5. Afunde todos os navios da IA antes que ela afunde os seus
+6. Veja sua **pontuação e posição no ranking** ao final da partida
+
+---
+
+## 🧮 Sistema de Pontuação
+
+| Componente | Pontos |
+|-----------|--------|
+| Base (Fácil) | 100 pts |
+| Base (Médio) | 250 pts |
+| Base (Difícil) | 500 pts |
+| Bônus de Precisão | até 200 pts |
+| Bônus de Tempo | até 300 pts |
+| Bônus de Vitória | 300 pts |
+
+---
+
+## 📁 Estrutura Relevante
+
+```
+app/
+├── Livewire/
+│   └── JogoBatalha.php       # Lógica principal do jogo
+├── Models/
+│   ├── Partida.php
+│   ├── Tabuleiro.php
+│   └── Ranking.php
+├── Http/Controllers/
+│   └── RankingController.php
+└── Services/AI/
+    └── AISelector.php        # Seletor de estratégia da IA
+
+resources/views/
+├── livewire/
+│   └── tabuleiro.blade.php   # Interface do jogo
+└── ranking/
+    └── index.blade.php       # Página de ranking
+```
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Autenticação de usuários
+- [x] Posicionamento de frota
+- [x] Combate contra IA
+- [x] Múltiplas dificuldades
+- [x] Sistema de ranking e pontuação
+- [ ] Modo multiplayer em tempo real
+- [ ] Sons e efeitos visuais
+- [ ] Animações de explosão ao afundar navios
+- [ ] Perfil do jogador com estatísticas detalhadas
+
+---
+
+## 👤 Autores
+
+Desenvolvido por **Douglas Henrique, Antônio Gustavo, Genildo Burgos, Paulo Eduardo**
+
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/douglaskks/batalha-naval)
+
+
+---
+
+<div align="center">
+  <sub>Projeto acadêmico — UFAPE • Ciência da Computação</sub>
+</div>
