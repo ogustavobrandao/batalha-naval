@@ -130,14 +130,17 @@ class JogoBatalha extends Component
         }
 
         // Aplica o posicionamento
-        foreach ($coordenadas as $coord) {
-            $this->meuTabuleiro[$coord[0]][$coord[1]] = [
-                'status' => 'posicionado',
-                'navio' => $this->navioSelecionado,
-                'ship_id' => $idNavio,
-                'cor' => $this->naviosDisponiveis[$this->navioSelecionado]['cor']
-            ];
-        }
+        foreach ($coordenadas as $index => $coord) {
+        $this->meuTabuleiro[$coord[0]][$coord[1]] = [
+            'status'  => 'posicionado',
+            'navio'   => $this->navioSelecionado,
+            'ship_id' => $idNavio,
+            'cor'     => $this->naviosDisponiveis[$this->navioSelecionado]['cor'],
+            'parte'   => $index,
+            'tamanho' => $tamanho,
+            'direcao' => $this->direcaoNavio,
+        ];
+    }
 
         $this->navioSelecionado = null;
         $this->salvarMeuTabuleiro();
@@ -304,10 +307,13 @@ class JogoBatalha extends Component
                             else $nr -= $i;
 
                             $grid[$nr][$nc] = [
-                                'status' => 'agua',
-                                'navio' => $tipo,
+                                'status'  => 'agua',
+                                'navio'   => $tipo,
                                 'ship_id' => $idNavio,
-                                'cor' => $config['cor']
+                                'cor'     => $config['cor'],
+                                'parte'   => $i,
+                                'tamanho' => $config['tamanho'],
+                                'direcao' => $dir,
                             ];
                         }
                         $posicionado = true;
