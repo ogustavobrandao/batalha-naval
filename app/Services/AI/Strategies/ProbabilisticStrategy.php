@@ -98,25 +98,67 @@ class ProbabilisticStrategy implements OpponentStrategy
 
     private function aplicarPesoDeCaca(array &$mapa, array $memoria): void
     {
-        // Varre a matriz de memória buscando acertos pendentes
+        // 1. Coleta todos os acertos pendentes (navios atingidos mas não afundados)
+        $acertosPendentes = [];
         foreach ($memoria as $linha) {
             foreach ($linha as $tiro) {
                 if ($tiro->foi_atingido && !$tiro->navio_afundado) {
-                    $vizinhos = [
-                        ['x' => $tiro->x, 'y' => $tiro->y - 1],
-                        ['x' => $tiro->x, 'y' => $tiro->y + 1],
-                        ['x' => $tiro->x - 1, 'y' => $tiro->y],
-                        ['x' => $tiro->x + 1, 'y' => $tiro->y],
-                    ];
-
-                    foreach ($vizinhos as $v) {
-                        if ($v['x'] >= 0 && $v['x'] < 10 && $v['y'] >= 0 && $v['y'] < 10) {
-                            if (!isset($memoria[$v['x']][$v['y']])) {
-                                $mapa[$v['x']][$v['y']] += 50;
-                            }
-                        }
-                    }
+                    $acertosPendentes[] = $tiro;
                 }
+            }
+        }
+
+        if (empty($acertosPendentes)) {
+            return;
+        }
+
+        // 2. Tenta encontrar alinhamentos entre os acertos para focar nas extremidades
+        $temAlinhamento = false;
+
+        foreach ($acertosPendentes as $tiroA) {
+            foreach ($acertosPendentes as $tiroB) {
+                if ($tiroA->id === $tiroB->id) continue;
+
+                // Verifica alinhamento Horizontal
+                if ($tiroA->x === $tiroB->x && abs($tiroA->y - $tiroB->y) === 1) {
+                    $temAlinhamento = true;
+                    // Bônus nas extremidades horizontais
+                    $this->adicionarPesoSeValido($mapa, $memoria, $tiroA->x, min($tiroA->y, $tiroB->y) - 1, 100);
+                    $this->adicionarPesoSeValido($mapa, $memoria, $tiroA->x, max($tiroA->y, $tiroB->y) + 1, 100);
+                }
+
+                // Verifica alinhamento Vertical
+                if ($tiroA->y === $tiroB->y && abs($tiroA->x - $tiroB->x) === 1) {
+                    $temAlinhamento = true;
+                    // Bônus nas extremidades verticais
+                    $this->adicionarPesoSeValido($mapa, $memoria, min($tiroA->x, $tiroB->x) - 1, $tiroA->y, 100);
+                    $this->adicionarPesoSeValido($mapa, $memoria, max($tiroA->x, $tiroB->x) + 1, $tiroA->y, 100);
+                }
+            }
+        }
+
+        // 3. Se não achou alinhamento (apenas 1 acerto ou acertos distantes), espalha peso nos vizinhos normais
+        if (!$temAlinhamento) {
+            foreach ($acertosPendentes as $tiro) {
+                $vizinhos = [
+                    ['x' => $tiro->x - 1, 'y' => $tiro->y],
+                    ['x' => $tiro->x + 1, 'y' => $tiro->y],
+                    ['x' => $tiro->x, 'y' => $tiro->y - 1],
+                    ['x' => $tiro->x, 'y' => $tiro->y + 1],
+                ];
+
+                foreach ($vizinhos as $v) {
+                    $this->adicionarPesoSeValido($mapa, $memoria, $v['x'], $v['y'], 50);
+                }
+            }
+        }
+    }
+
+    private function adicionarPesoSeValido(array &$mapa, array $memoria, int $x, int $y, int $peso): void
+    {
+        if ($x >= 0 && $x < 10 && $y >= 0 && $y < 10) {
+            if (!isset($memoria[$x][$y])) { // Só adiciona peso se ainda não atirou aqui
+                $mapa[$x][$y] += $peso;
             }
         }
     }
