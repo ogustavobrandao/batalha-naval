@@ -4,6 +4,7 @@ use App\Http\Controllers\PartidaController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\JogoBatalha;
+use App\Livewire\LobbyOnline;
 use App\Http\Controllers\RankingController;
 
 Route::get('/', function () {
@@ -20,6 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::resource('partida', PartidaController::class);
     Route::get('/modos', [PartidaController::class, 'modos'])->name('partida.modos');
+    Route::get('/lobby', LobbyOnline::class)->name('lobby.online');
     Route::get('/batalha/{id}', JogoBatalha::class)->name('jogo.batalha');
     Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index');
     Route::get('/regras', function () {

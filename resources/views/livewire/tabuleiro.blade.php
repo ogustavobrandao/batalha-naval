@@ -9,7 +9,7 @@
             transform-style: preserve-3d;
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        /* Corrigido: overflow visible para os navios 3D não serem cortados */
+        /* overflow visible para os navios 3D não serem cortados */
         .grid-cell {
             border: 1px solid rgba(19, 127, 236, 0.1);
             transform-style: flat;
@@ -20,26 +20,26 @@
 
         /* BLOCOS 3D */
         .ship-block {
-    background: var(--ship-color) !important;
-    transform: translateZ(20px);
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-}
-.ship-block::before {
-    content: ''; position: absolute; top: 0; left: 100%; width: 20px; height: 100%;
-    background: var(--ship-color); filter: brightness(0.7);
-    transform-origin: left; transform: rotateY(90deg);
-}
-.ship-block::after {
-    content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px;
-    background: var(--ship-color); filter: brightness(0.5);
-    transform-origin: top; transform: rotateX(-90deg);
-}
+            background: var(--ship-color) !important;
+            transform: translateZ(20px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .ship-block::before {
+            content: ''; position: absolute; top: 0; left: 100%; width: 20px; height: 100%;
+            background: var(--ship-color); filter: brightness(0.7);
+            transform-origin: left; transform: rotateY(90deg);
+        }
+        .ship-block::after {
+            content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px;
+            background: var(--ship-color); filter: brightness(0.5);
+            transform-origin: top; transform: rotateX(-90deg);
+        }
 
-.ship-block > div {
-    position: absolute;
-    inset: 0;
-    z-index: 999;
-}
+        .ship-block > div {
+            position: absolute;
+            inset: 0;
+            z-index: 999;
+        }
 
         /* ESTADOS DE COMBATE */
         .cell-hit  { background: rgba(239, 68, 68, 0.55) !important; box-shadow: 0 0 15px #ef4444; }
@@ -60,16 +60,42 @@
         }
     </style>
 
-    <header class="flex items-center justify-between border-b border-white/5 px-10 py-5 bg-[#0a0f14]/95 backdrop-blur-xl z-50">
-        <div class="flex items-center gap-4 text-[#137fec]">
-            <span class="material-symbols-outlined text-4xl animate-pulse">radar</span>
-            <h1 class="text-2xl font-black uppercase tracking-tighter italic">Comando Tático</h1>
+    @if($fase === 'posicionamento')
+        <header class="flex items-center justify-between border-b border-white/5 px-10 py-5 bg-[#0a0f14]/95 backdrop-blur-xl z-50">
+            <button wire:click="girarRadar" class="flex items-center gap-4 px-8 py-2 bg-[#137fec]/10 border border-[#137fec]/30 rounded-full hover:bg-[#137fec]/20 transition-all">
+                <span class="material-symbols-outlined text-xl text-[#137fec]">sync</span>
+                <span class="text-xs font-black uppercase tracking-[0.3em]">Visão Orbital</span>
+            </button>
+        </header>
+    @endif
+
+    @php
+        $souJogador1 = Auth::id() === $partida->criado_por;
+        $euEstouPronto = $souJogador1 ? $partida->jogador1_pronto : $partida->jogador2_pronto;
+        $oponentePronto = $souJogador1 ? $partida->jogador2_pronto : $partida->jogador1_pronto;
+    @endphp
+
+    {{-- Overlay de Espera: Só aparece se EU confirmei e o OUTRO não --}}
+    @if($partida->eMultiplayer() && $fase === 'posicionamento' && $euEstouPronto && !$oponentePronto)
+        <div class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 backdrop-blur-md">
+            <div class="text-center p-12 border border-blue-500/30 rounded-[3rem] bg-slate-900 shadow-2xl">
+                <div class="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                <h3 class="text-2xl font-black italic uppercase text-white tracking-tighter">Implantação Confirmada</h3>
+                <p class="text-slate-500 font-bold uppercase text-xs mt-2 tracking-widest">Aguardando o oponente posicionar a esquadra...</p>
+            </div>
         </div>
-        <button wire:click="girarRadar" class="flex items-center gap-4 px-8 py-2 bg-[#137fec]/10 border border-[#137fec]/30 rounded-full hover:bg-[#137fec]/20 transition-all">
-            <span class="material-symbols-outlined text-xl text-[#137fec]">sync</span>
-            <span class="text-xs font-black uppercase tracking-[0.3em]">Visão Orbital</span>
-        </button>
-    </header>
+    @endif
+
+    {{-- Overlay de Turno do Inimigo: Durante a Batalha --}}
+    @if($fase === 'batalha' && $bloquearAcoes)
+        <div class="fixed inset-x-0 top-32 z-40 pointer-events-none flex justify-center">
+            <div class="bg-red-500/10 border border-red-500/20 px-8 py-3 rounded-full backdrop-blur-md shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                <span class="text-red-500 font-black uppercase text-xs tracking-[0.4em] animate-pulse italic">
+                    Atenção: Turno do Inimigo
+                </span>
+            </div>
+        </div>
+    @endif
 
     <main class="flex-1 flex overflow-hidden">
         <div class="flex-1 relative flex items-center justify-center p-20 bg-[radial-gradient(circle_at_center,_#137fec10_0%,_transparent_75%)]">
@@ -78,7 +104,6 @@
             <div class="flex flex-col items-center gap-8 rounded-3xl border border-white/10 bg-[#0a0f14] p-16 text-center shadow-2xl max-w-lg w-full mx-4">
 
                 @php $ranking = \App\Models\Ranking::where('partida_id', $partida->id)->where('user_id', auth()->id())->latest()->first(); @endphp
-
                 @if($ranking && $ranking->venceu)
                     <span class="material-symbols-outlined text-8xl text-yellow-400 animate-bounce">military_tech</span>
                     <h2 class="text-5xl font-black uppercase italic tracking-tighter text-yellow-400">Vitória!</h2>
@@ -131,7 +156,7 @@
         <div wire:key="pos-{{ $r }}-{{ $c }}"
              wire:click="clicarCelula({{ $r }}, {{ $c }})"
              style="--ship-color: {{ $celula['cor'] ?? 'transparent' }}; color: {{ $celula['cor'] ?? 'transparent' }}; z-index: {{ $r + $c }}; position: relative;"
-class="grid-cell {{ isset($celula['ship_id']) ? 'ship-block cursor-alias' : 'hover:bg-[#137fec]/10 cursor-pointer' }} group">
+            class="grid-cell {{ isset($celula['ship_id']) ? 'ship-block cursor-alias' : 'hover:bg-[#137fec]/10 cursor-pointer' }} group">
 
             @if(isset($celula['ship_id']))
                 @include('partials.navio-segmento', [

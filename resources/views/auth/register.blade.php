@@ -25,7 +25,7 @@
                         </p>
 
                         <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
-                            <a href="{{ route('welcome') }}"
+                            <a href="{{ route('login') }}"
                                class="inline-flex items-center justify-center rounded-xl bg-white/5 px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/10 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20">
                                 Já tenho conta
                             </a>
@@ -96,7 +96,7 @@
                                 <p class="pt-2 text-center text-sm text-slate-300">
                                     Já tem conta?
                                     <a class="font-semibold text-blue-300 hover:text-blue-200"
-                                       href="{{ route('welcome') }}">
+                                       href="{{ route('login') }}">
                                         Entrar
                                     </a>
                                 </p>

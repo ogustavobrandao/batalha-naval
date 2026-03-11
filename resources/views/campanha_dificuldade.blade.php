@@ -1,206 +1,192 @@
 <x-app-layout>
-    <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
-        <div class="layout-container flex h-full grow flex-col">
-            <div class="flex flex-1 items-center justify-center p-4 sm:p-6 md:p-8">
-                <div class="layout-content-container flex w-full max-w-4xl flex-col items-center gap-8 py-10">
-                    <!-- PageHeading -->
-                    <div class="flex w-full flex-col gap-3 text-center">
-                        <h1 class="text-4xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-                            Modo Campanha: Nível de Dificuldade
-                        </h1>
-                        <p class="text-base font-normal leading-normal text-slate-600 dark:text-slate-400 sm:text-lg">
-                            Selecione o nível de dificuldade da IA para iniciar a batalha.
-                        </p>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <div class="min-h-screen bg-[#020617] text-white font-sans">
+
+        {{-- HERO --}}
+        <section class="relative pt-14 pb-10 overflow-hidden">
+            <div class="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.04)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none"></div>
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-4xl mx-auto px-6 relative z-10">
+                <p class="text-blue-500 font-black uppercase tracking-[0.4em] text-xs mb-3">Modo Campanha</p>
+                <h1 class="text-5xl md:text-7xl font-[1000] italic uppercase tracking-tighter leading-[0.85]">
+                    ESCOLHA O <br><span class="text-blue-500">INIMIGO.</span>
+                </h1>
+                <div class="h-1 w-20 bg-blue-600 mt-4"></div>
+                <p class="text-slate-400 font-bold uppercase italic text-sm mt-5 opacity-70">
+                    Selecione o nível de dificuldade da IA para iniciar a batalha.
+                </p>
+            </div>
+        </section>
+
+        {{-- FORM --}}
+        <form id="campanha_store" action="{{ route('partida.store') }}" method="post">
+            @csrf
+            <input type="hidden" name="modo" value="{{ $modo }}">
+
+            <section class="max-w-4xl mx-auto px-6 pb-10">
+                <div class="grid sm:grid-cols-3 gap-5" id="dificuldade-cards">
+
+                    {{-- Fácil --}}
+                    <div class="dificuldade-card group relative flex flex-col justify-between p-8 bg-slate-900 border-2 rounded-3xl cursor-pointer transition-all duration-300
+                                {{ old('dificuldade', $dificuldade) === 'facil' ? 'border-green-500/60 bg-green-500/5 shadow-[0_0_30px_rgba(34,197,94,0.1)]' : 'border-white/5 hover:border-green-500/30' }}">
+                        <input type="radio" name="dificuldade" value="facil" class="sr-only"
+                               {{ old('dificuldade', $dificuldade) === 'facil' ? 'checked' : '' }}>
+
+                        <div class="selected-check absolute top-4 right-4 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center transition-opacity
+                                    {{ old('dificuldade', $dificuldade) === 'facil' ? 'opacity-100' : 'opacity-0' }}">
+                            <span class="material-symbols-outlined text-white text-sm font-bold">check</span>
+                        </div>
+
+                        <span class="material-symbols-outlined text-5xl font-bold mb-6
+                                     {{ old('dificuldade', $dificuldade) === 'facil' ? 'text-green-400' : 'text-slate-600 group-hover:text-green-500' }} transition-colors">
+                            gps_not_fixed
+                        </span>
+
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] mb-2
+                                      {{ old('dificuldade', $dificuldade) === 'facil' ? 'text-green-400' : 'text-slate-600' }}">
+                                Nível: Marinheiro
+                            </p>
+                            <h3 class="text-xl font-[1000] italic uppercase tracking-tighter mb-3">Recruta</h3>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase leading-relaxed">
+                                IA dispara aleatoriamente sem memória de acertos. Ideal para iniciantes.
+                            </p>
+                            <p class="text-green-400 font-[1000] italic text-lg mt-4">100 pts base</p>
+                        </div>
                     </div>
 
-                    <!-- Difficulty Cards -->
-                    <form id="campanha_store" action="{{ route('partida.store') }}" method="post" class="w-full">
-                        @csrf
-                        <input type="hidden" name="modo" value="{{ $modo }}">
+                    {{-- Médio --}}
+                    <div class="dificuldade-card group relative flex flex-col justify-between p-8 bg-slate-900 border-2 rounded-3xl cursor-pointer transition-all duration-300
+                                {{ old('dificuldade', $dificuldade) === 'medio' ? 'border-blue-500/60 bg-blue-500/5 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-white/5 hover:border-blue-500/30' }}">
+                        <input type="radio" name="dificuldade" value="medio" class="sr-only"
+                               {{ old('dificuldade', $dificuldade) === 'medio' ? 'checked' : '' }}>
 
-                        <div class="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" id="dificuldade-cards">
-
-                            <!-- Card 1: Fácil -->
-                            <div
-                                class="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 dificuldade-card"
-                            >
-                                <input
-                                    type="radio"
-                                    name="dificuldade"
-                                    id="dif_facil"
-                                    value="facil"
-                                    class="sr-only"
-                                    {{ old('dificuldade', 'facil') === 'facil' ? 'checked' : '' }}
-                                >
-
-                                <div class="selected-bg absolute inset-0 z-0 rounded-xl bg-primary/10 opacity-0 transition-opacity duration-300"></div>
-
-                                <div class="relative z-10 flex flex-col items-center text-center gap-4">
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                                        <span class="material-symbols-outlined text-4xl">gps_not_fixed</span>
-                                    </div>
-
-                                    <div class="flex flex-col gap-1">
-                                        <h2 class="text-lg font-bold leading-normal text-slate-900 dark:text-white">
-                                            Marinheiro Recruta
-                                        </h2>
-                                        <p class="text-sm font-normal leading-normal text-slate-600 dark:text-slate-400">
-                                            A IA dispara aleatoriamente pelo tabuleiro, sem memória de acertos anteriores. Ideal para iniciantes.
-                                        </p>
-                                    </div>
-
-                                    <div class="selected-icon absolute -top-3 -right-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white opacity-0 transition-opacity duration-300">
-                                        <span class="material-symbols-outlined text-base">check</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card 2: Médio -->
-                            <div
-                                class="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 dificuldade-card"
-                            >
-                                <input
-                                    type="radio"
-                                    name="dificuldade"
-                                    id="dif_medio"
-                                    value="medio"
-                                    class="sr-only"
-                                    {{ old('dificuldade') === 'medio' ? 'checked' : '' }}
-                                >
-
-                                <div class="selected-bg absolute inset-0 z-0 rounded-xl bg-primary/10 opacity-0 transition-opacity duration-300"></div>
-
-                                <div class="relative z-10 flex flex-col items-center text-center gap-4">
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                                        <span class="material-symbols-outlined text-4xl">radar</span>
-                                    </div>
-
-                                    <div class="flex flex-col gap-1">
-                                        <h2 class="text-lg font-bold leading-normal text-slate-900 dark:text-white">
-                                            Capitão Experiente
-                                        </h2>
-                                        <p class="text-sm font-normal leading-normal text-slate-600 dark:text-slate-400">
-                                            Após um acerto, a IA concentra os disparos na área ao redor para afundar o navio rapidamente. Um desafio equilibrado.
-                                        </p>
-                                    </div>
-
-                                    <div class="selected-icon absolute -top-3 -right-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white opacity-0 transition-opacity duration-300">
-                                        <span class="material-symbols-outlined text-base">check</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Card 3: Difícil -->
-                            <div
-                                class="group relative flex cursor-pointer flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/50 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 dificuldade-card"
-                            >
-                                <input
-                                    type="radio"
-                                    name="dificuldade"
-                                    id="dif_dificil"
-                                    value="dificil"
-                                    class="sr-only"
-                                    {{ old('dificuldade') === 'dificil' ? 'checked' : '' }}
-                                >
-
-                                <div class="selected-bg absolute inset-0 z-0 rounded-xl bg-primary/10 opacity-0 transition-opacity duration-300"></div>
-
-                                <div class="relative z-10 flex flex-col items-center text-center gap-4">
-                                    <div class="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                                        <span class="material-symbols-outlined text-4xl">psychology</span>
-                                    </div>
-
-                                    <div class="flex flex-col gap-1">
-                                        <h2 class="text-lg font-bold leading-normal text-slate-900 dark:text-white">
-                                            Almirante Estrategista
-                                        </h2>
-                                        <p class="text-sm font-normal leading-normal text-slate-600 dark:text-slate-400">
-                                            Utiliza análise probabilística para determinar as posições mais prováveis dos navios inimigos. Desafio máximo.
-                                        </p>
-                                    </div>
-
-                                    <div class="selected-icon absolute -top-3 -right-3 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-white opacity-0 transition-opacity duration-300">
-                                        <span class="material-symbols-outlined text-base">check</span>
-                                    </div>
-                                </div>
-                            </div>
-
+                        <div class="selected-check absolute top-4 right-4 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center transition-opacity
+                                    {{ old('dificuldade', $dificuldade) === 'medio' ? 'opacity-100' : 'opacity-0' }}">
+                            <span class="material-symbols-outlined text-white text-sm font-bold">check</span>
                         </div>
-                    </form>
 
-                    <!-- Buttons -->
-                    <div class="flex w-full max-w-lg flex-col items-center gap-3 pt-6 sm:flex-row">
-                        <a href="{{ route('dashboard') }}"
-                            class="flex h-12 w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white text-base font-bold leading-normal tracking-wide transition-colors hover:bg-slate-300 dark:hover:bg-slate-700"
-                        >
-                            <span class="truncate">Voltar ao Menu</span>
-                        </a>
+                        <span class="material-symbols-outlined text-5xl font-bold mb-6
+                                     {{ old('dificuldade', $dificuldade) === 'medio' ? 'text-blue-400' : 'text-slate-600 group-hover:text-blue-500' }} transition-colors">
+                            radar
+                        </span>
 
-                        <button
-                            form="campanha_store"
-                            class="flex h-12 w-full min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-primary text-white text-base font-bold leading-normal tracking-wide shadow-lg shadow-primary/30 transition-colors hover:bg-primary/90"
-                        >
-                            <span class="truncate">Iniciar Campanha</span>
-                        </button>
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] mb-2
+                                      {{ old('dificuldade', $dificuldade) === 'medio' ? 'text-blue-400' : 'text-slate-600' }}">
+                                Nível: Capitão
+                            </p>
+                            <h3 class="text-xl font-[1000] italic uppercase tracking-tighter mb-3">Experiente</h3>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase leading-relaxed">
+                                Após um acerto, a IA persegue o navio sistematicamente até afundá-lo.
+                            </p>
+                            <p class="text-blue-400 font-[1000] italic text-lg mt-4">250 pts base</p>
+                        </div>
+                    </div>
+
+                    {{-- Difícil --}}
+                    <div class="dificuldade-card group relative flex flex-col justify-between p-8 bg-slate-900 border-2 rounded-3xl cursor-pointer transition-all duration-300
+                                {{ old('dificuldade', $dificuldade) === 'dificil' ? 'border-red-500/60 bg-red-500/5 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'border-white/5 hover:border-red-500/30' }}">
+                        <input type="radio" name="dificuldade" value="dificil" class="sr-only"
+                               {{ old('dificuldade', $dificuldade) === 'dificil' ? 'checked' : '' }}>
+
+                        <div class="selected-check absolute top-4 right-4 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center transition-opacity
+                                    {{ old('dificuldade', $dificuldade) === 'dificil' ? 'opacity-100' : 'opacity-0' }}">
+                            <span class="material-symbols-outlined text-white text-sm font-bold">check</span>
+                        </div>
+
+                        <span class="material-symbols-outlined text-5xl font-bold mb-6
+                                     {{ old('dificuldade', $dificuldade) === 'dificil' ? 'text-red-400' : 'text-slate-600 group-hover:text-red-500' }} transition-colors">
+                            psychology
+                        </span>
+
+                        <div>
+                            <p class="text-[10px] font-black uppercase tracking-[0.4em] mb-2
+                                      {{ old('dificuldade', $dificuldade) === 'dificil' ? 'text-red-400' : 'text-slate-600' }}">
+                                Nível: Almirante
+                            </p>
+                            <h3 class="text-xl font-[1000] italic uppercase tracking-tighter mb-3">Estrategista</h3>
+                            <p class="text-slate-500 text-[10px] font-bold uppercase leading-relaxed">
+                                Usa mapa de calor e análise probabilística para prever sua frota.
+                            </p>
+                            <p class="text-red-400 font-[1000] italic text-lg mt-4">500 pts base</p>
+                        </div>
                     </div>
 
                 </div>
-            </div>
-        </div>
+            </section>
+
+            {{-- BOTÕES --}}
+            <section class="max-w-4xl mx-auto px-6 pb-16">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="{{ route('dashboard') }}"
+                       class="flex-1 flex items-center justify-center gap-3 py-5 bg-slate-900 border border-white/5 rounded-2xl font-black uppercase italic tracking-tighter text-slate-400 hover:text-white hover:border-white/10 transition-all">
+                        <span class="material-symbols-outlined font-bold">arrow_back</span>
+                        Voltar ao Menu
+                    </a>
+                    <button type="submit" form="campanha_store"
+                            class="flex-1 flex items-center justify-center gap-3 py-5 bg-blue-600 text-white font-black uppercase italic tracking-tighter rounded-2xl shadow-[0_6px_0_rgb(30,58,138)] hover:translate-y-[2px] hover:shadow-[0_4px_0_rgb(30,58,138)] active:translate-y-[4px] active:shadow-none transition-all">
+                        <span class="material-symbols-outlined font-bold">rocket_launch</span>
+                        Iniciar Combate
+                    </button>
+                </div>
+            </section>
+
+        </form>
     </div>
 
     @push('scripts')
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const container = document.getElementById('dificuldade-cards');
-        if (!container) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.dificuldade-card');
 
-        const cards = Array.from(container.querySelectorAll('.dificuldade-card'));
+            const colors = {
+                'facil':   { border: 'border-green-500/60', bg: 'bg-green-500/5',  shadow: 'shadow-[0_0_30px_rgba(34,197,94,0.1)]',   icon: 'text-green-400', label: 'text-green-400', check: 'bg-green-500'  },
+                'medio':   { border: 'border-blue-500/60',  bg: 'bg-blue-500/5',   shadow: 'shadow-[0_0_30px_rgba(59,130,246,0.1)]',   icon: 'text-blue-400',  label: 'text-blue-400',  check: 'bg-blue-500'   },
+                'dificil': { border: 'border-red-500/60',   bg: 'bg-red-500/5',    shadow: 'shadow-[0_0_30px_rgba(239,68,68,0.1)]',    icon: 'text-red-400',   label: 'text-red-400',   check: 'bg-red-500'    },
+            };
 
-        function setSelected(card, selected) {
-          // visual selecionado (igual ao seu "médio" original)
-          card.classList.toggle('border-primary/70', selected);
-          card.classList.toggle('dark:border-primary/70', selected);
-          card.classList.toggle('shadow-lg', selected);
-          card.classList.toggle('shadow-primary/20', selected);
+            const defaults = {
+                'facil':   { border: 'border-white/5', hover: 'hover:border-green-500/30', icon: 'text-slate-600', label: 'text-slate-600' },
+                'medio':   { border: 'border-white/5', hover: 'hover:border-blue-500/30',  icon: 'text-slate-600', label: 'text-slate-600' },
+                'dificil': { border: 'border-white/5', hover: 'hover:border-red-500/30',   icon: 'text-slate-600', label: 'text-slate-600' },
+            };
 
-          // visual padrão quando não selecionado
-          card.classList.toggle('border-slate-200', !selected);
-          card.classList.toggle('dark:border-slate-800', !selected);
+            function selectCard(card) {
+                const value = card.querySelector('input[type="radio"]').value;
 
-          const bg = card.querySelector('.selected-bg');
-          const icon = card.querySelector('.selected-icon');
+                cards.forEach(c => {
+                    const v = c.querySelector('input[type="radio"]').value;
+                    const col = colors[v];
+                    const def = defaults[v];
+                    const radio = c.querySelector('input[type="radio"]');
+                    const check = c.querySelector('.selected-check');
+                    const icon  = c.querySelector('.material-symbols-outlined:not(.selected-check span)');
+                    const label = c.querySelector('p[class*="tracking-"]');
 
-          if (bg) {
-            bg.classList.toggle('opacity-100', selected);
-            bg.classList.toggle('opacity-0', !selected);
-          }
-          if (icon) {
-            icon.classList.toggle('opacity-100', selected);
-            icon.classList.toggle('opacity-0', !selected);
-          }
-        }
+                    // Reset
+                    c.classList.remove(col.border, col.bg, col.shadow);
+                    c.classList.add(def.border, def.hover);
+                    if (check) check.classList.add('opacity-0');
+                    radio.checked = false;
+                });
 
-        function selectCard(card) {
-          cards.forEach(c => setSelected(c, false));
-          setSelected(card, true);
+                // Ativa selecionado
+                const col = colors[value];
+                const def = defaults[value];
+                card.classList.remove(def.border, def.hover);
+                card.classList.add(col.border, col.bg, col.shadow);
+                card.querySelector('input[type="radio"]').checked = true;
+                const check = card.querySelector('.selected-check');
+                if (check) check.classList.remove('opacity-0');
+            }
 
-          const radio = card.querySelector('input[type="radio"][name="dificuldade"]');
-          if (radio) radio.checked = true;
-        }
-
-        cards.forEach(card => {
-          card.addEventListener('click', () => selectCard(card));
+            cards.forEach(card => {
+                card.addEventListener('click', () => selectCard(card));
+            });
         });
-
-        // aplica visual com base no checked (old())
-        const checked = container.querySelector('input[name="dificuldade"]:checked');
-        if (checked) {
-          selectCard(checked.closest('.dificuldade-card'));
-        } else if (cards[0]) {
-          selectCard(cards[0]);
-        }
-      });
     </script>
     @endpush
 </x-app-layout>

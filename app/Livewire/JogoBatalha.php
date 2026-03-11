@@ -5,8 +5,12 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Partida;
 use App\Models\Tabuleiro;
+use \App\Models\Ranking;
 use App\Services\AI\AISelector;
 use Illuminate\Support\Facades\Auth;
+use App\Events\JogadaRealizada;
+use App\Models\Medalha;
+use App\Services\MedalhaService;
 
 class JogoBatalha extends Component
 {
@@ -38,21 +42,71 @@ class JogoBatalha extends Component
         $this->partida = Partida::findOrFail($id);
         $this->carregarTabuleiros();
         $this->sincronizarStatusFrota();
+
+        if ($this->fase === 'batalha') {
+            $this->bloquearAcoes = ($this->partida->turno_atual_id !== Auth::id());
+        } else {
+            // Se eu já confirmei mas o oponente não, fico em modo de espera (loading)
+            $souJogador1 = Auth::id() === $this->partida->criado_por;
+            $estouPronto = $souJogador1 ? ($this->partida->jogador1_pronto ?? false) : ($this->partida->jogador2_pronto ?? false);
+
+            if ($estouPronto) {
+                $this->bloquearAcoes = true;
+            }
+        }
+    }
+
+    protected function getListeners()
+    {
+        return [
+            "echo-private:partida.{$this->partida->id},.JogadaRealizada" => 'receberJogadaOnline',
+        ];
     }
 
     private function carregarTabuleiros()
     {
+        // Carrega o meu tabuleiro
         $meuBoard = Tabuleiro::where('partida_id', $this->partida->id)
             ->where('user_id', Auth::id())
             ->first();
-        $this->meuTabuleiro = $meuBoard->tabuleiro_grid;
 
-        $boardOponente = Tabuleiro::where('partida_id', $this->partida->id)
-            ->whereNull('user_id')
-            ->first();
-        $this->tabuleiroOponente = $boardOponente->tabuleiro_grid;
+        if ($meuBoard) {
+            $this->meuTabuleiro = $meuBoard->tabuleiro_grid;
+        } else {
+            // Caso de segurança: inicializa grid vazio se não encontrar
+            $this->meuTabuleiro = array_fill(0, 10, array_fill(0, 10, ['status' => 'agua', 'navio' => null]));
+        }
 
-        $this->fase = ($this->partida->status === 'posicionamento') ? 'posicionamento' : 'batalha';
+        // Carrega o tabuleiro do oponente
+        $queryOponente = Tabuleiro::where('partida_id', $this->partida->id);
+
+        if ($this->partida->eMultiplayer()) {
+            $queryOponente->where('user_id', '!=', Auth::id());
+        } else {
+            $queryOponente->whereNull('user_id'); // Contra IA
+        }
+
+        $boardOponente = $queryOponente->first();
+
+        // Se o oponente ainda não existe (Lobby PvP), carrega um grid vazio temporário
+        if ($boardOponente) {
+            $this->tabuleiroOponente = $boardOponente->tabuleiro_grid;
+        } else {
+            $this->tabuleiroOponente = array_fill(0, 10, array_fill(0, 10, ['status' => 'agua', 'navio' => null]));
+        }
+
+        $this->fase = match ($this->partida->status) {
+            'finalizada' => 'finalizada',
+            'em_andamento' => 'batalha',
+            default => 'posicionamento'
+        };
+
+        // Se sou o criador e ainda não tem oponente, eu posso posicionar,
+        // mas não posso atirar (bloquearAcoes impede o tiro, mas não o posicionamento no seu código atual)
+        if ($this->partida->modo === 'pvp' && !$this->partida->jogador2_id) {
+            // Não bloqueamos aqui para o criador conseguir posicionar os navios dele!
+            $this->bloquearAcoes = false;
+        }
     }
 
     public function sincronizarStatusFrota()
@@ -170,19 +224,79 @@ class JogoBatalha extends Component
     {
         if ($this->fase !== 'batalha' || $this->bloquearAcoes) return;
 
-        $tabuleiroIA = Tabuleiro::where('partida_id', $this->partida->id)->whereNull('user_id')->first();
-
-        // Impede atirar no mesmo lugar duas vezes
-        if ($this->tabuleiroOponente[$r][$c]['status'] !== 'agua') return;
-
-        $acertou = $this->registrarTiro($tabuleiroIA, $r, $c);
-
-        // Se errou, passa o turno para a IA
-        if (!$acertou) {
-            $this->jaMoveuNesteTurno = false; // Reset para o próximo turno do jogador
-            $this->bloquearAcoes = true;
-            $this->dispatch('ia-turno');
+        // Permitir tiro se o status for 'agua' OU 'posicionado' (navio escondido)
+        // Impedimos apenas se já tiver um tiro no local ('acerto' ou 'erro')
+        $statusAlvo = $this->tabuleiroOponente[$r][$c]['status'];
+        if ($statusAlvo === 'acerto' || $statusAlvo === 'erro' || $statusAlvo === 'afundado') {
+            return;
         }
+
+        $queryInimigo = Tabuleiro::where('partida_id', $this->partida->id);
+        if ($this->partida->eMultiplayer()) {
+            $queryInimigo->where('user_id', '!=', Auth::id());
+        } else {
+            $queryInimigo->whereNull('user_id');
+        }
+        $tabuleiroInimigo = $queryInimigo->first();
+
+        // Registar o tiro
+        $acertou = $this->registrarTiro($tabuleiroInimigo, $r, $c);
+
+        if ($this->partida->eMultiplayer()) {
+            broadcast(new JogadaRealizada($this->partida->id, 'tiro', ['r' => $r, 'c' => $c]))->toOthers();
+            if (!$acertou) {
+                $this->passarTurnoOnline();
+            }
+        } else {
+            if (!$acertou) {
+                $this->bloquearAcoes = true;
+                $this->dispatch('ia-turno');
+            }
+        }
+    }
+
+    private function passarTurnoOnline()
+    {
+        // O próximo turno é o ID do jogador que nao é o dono do turno atual
+        $proximoTurnoId = (Auth::id() === $this->partida->criado_por)
+            ? $this->partida->jogador2_id
+            : $this->partida->criado_por;
+
+        $this->partida->update(['turno_atual_id' => $proximoTurnoId]);
+        $this->bloquearAcoes = true;
+    }
+
+    public function receberJogadaOnline($event)
+    {
+        // 1. Força a atualização dos dados da partida vindos do banco
+        $this->partida->refresh();
+
+        if ($this->partida->status === 'finalizada') {
+            $this->carregarTabuleiros();
+            // Se eu perdi, calcula o ranking de derrota para mim também
+            $perdi = $this->todosAfundados($this->meuTabuleiro);
+            $this->calcularERegistrarRanking(!$perdi);
+            $this->fase = 'finalizada';
+            return;
+        }
+
+        if (($event['tipo'] ?? '') === 'ready') {
+            if ($this->partida->jogador1_pronto && $this->partida->jogador2_pronto) {
+                $this->partida->update(['status' => 'em_andamento']);
+                $this->fase = 'batalha';
+                $this->carregarTabuleiros();
+                $this->bloquearAcoes = ($this->partida->turno_atual_id !== Auth::id());
+            }
+        } else {
+            // 2. Recarrega os tabuleiros para mostrar o tiro do oponente
+            $this->carregarTabuleiros();
+
+            // 3. Atualiza o estado de bloqueio baseado no novo turno
+            $this->bloquearAcoes = ($this->partida->turno_atual_id !== Auth::id());
+        }
+
+        // 4. Notifica o Livewire para re-renderizar a página imediatamente
+        $this->dispatch('$refresh');
     }
 
     public function turnoIA()
@@ -264,9 +378,15 @@ class JogoBatalha extends Component
         foreach ($grid as $r => $linha) {
             foreach ($linha as $c => $celula) {
                 if (($celula['ship_id'] ?? null) === $idNavio) {
+                    // Bloqueia o movimento se o navio tiver qualquer parte atingida ou estiver afundado
+                    if ($celula['status'] === 'acerto' || $celula['status'] === 'afundado') {
+                        return false;
+                    }
+
                     $coordsAntigas[] = ['r' => $r, 'c' => $c, 'dados' => $celula];
                     $nr = $r;
                     $nc = $c;
+
                     if ($direcao === 'norte') $nr--;
                     elseif ($direcao === 'sul') $nr++;
                     elseif ($direcao === 'leste') $nc++;
@@ -355,16 +475,23 @@ class JogoBatalha extends Component
 
     private function verificarVitoria()
     {
-        $jogadorVenceu = $this->todosAfundados($this->tabuleiroOponente);
-        $iaVenceu      = $this->todosAfundados($this->meuTabuleiro);
+        $oponenteAfundado = $this->todosAfundados($this->tabuleiroOponente);
+        $euAfundado       = $this->todosAfundados($this->meuTabuleiro);
 
-        if ($jogadorVenceu || $iaVenceu) {
+        if ($oponenteAfundado || $euAfundado) {
             $this->partida->update([
                 'status'      => 'finalizada',
                 'finished_at' => now(),
             ]);
-            $this->calcularERegistrarRanking($jogadorVenceu);
+
+            // No PvP, ambos os jogadores precisam ter o ranking registado
+            $this->calcularERegistrarRanking($oponenteAfundado);
             $this->fase = 'finalizada';
+
+            // Notifica o oponente que o jogo acabou (opcional mas recomendado)
+            if ($this->partida->eMultiplayer()) {
+                broadcast(new JogadaRealizada($this->partida->id, 'fim_jogo', []))->toOthers();
+            }
         }
     }
 
@@ -382,9 +509,39 @@ class JogoBatalha extends Component
 
     public function iniciarBatalha()
     {
-        if (array_sum($this->statusFrota) === 0) {
+        if (array_sum($this->statusFrota) > 0) return;
+
+        if ($this->partida->eMultiplayer()) {
+            $souJogador1 = Auth::id() === $this->partida->criado_por;
+
+            // 1. Atualiza prontidão (Certifique-se que estão no $fillable do Model Partida)
+            if ($souJogador1) {
+                $this->partida->update(['jogador1_pronto' => true]);
+            } else {
+                $this->partida->update(['jogador2_pronto' => true]);
+            }
+
+            // 2. Bloqueia localmente para mostrar o overlay de espera
+            $this->bloquearAcoes = true;
+
+            // 3. Notifica o oponente
+            broadcast(new JogadaRealizada($this->partida->id, 'ready', []))->toOthers();
+
+            // 4. Verifica se ambos estão prontos para virar a fase
+            $this->partida->refresh();
+            if ($this->partida->jogador1_pronto && $this->partida->jogador2_pronto) {
+                $this->partida->update([
+                    'status' => 'em_andamento',
+                    'started_at' => now()
+                ]);
+                $this->fase = 'batalha';
+                $this->carregarTabuleiros(); // Recarrega para ver o grid do inimigo
+                $this->bloquearAcoes = ($this->partida->turno_atual_id !== Auth::id());
+            }
+        } else {
+            // Modo IA
             $this->posicionarIA();
-            $this->partida->update(['status' => 'em_andamento']);
+            $this->partida->update(['status' => 'em_andamento', 'started_at' => now()]);
             $this->fase = 'batalha';
             $this->carregarTabuleiros();
         }
@@ -461,49 +618,47 @@ class JogoBatalha extends Component
     }
 
     private function calcularERegistrarRanking(bool $venceu): void
-    {
-        $tabuleiroIA      = Tabuleiro::where('partida_id', $this->partida->id)->whereNull('user_id')->first();
-        $tabuleiroJogador = Tabuleiro::where('partida_id', $this->partida->id)->where('user_id', Auth::id())->first();
-
-        // Tiros que o JOGADOR deu (no tabuleiro da IA)
-        $tirosDados    = $tabuleiroIA->tiros()->count();
-        $acertos       = $tabuleiroIA->tiros()->where('foi_atingido', true)->count();
-        $naviosAfundados = $tabuleiroIA->tiros()->where('navio_afundado', true)->count();
-
-        // Tempo em segundos
-        $tempo = $this->partida->started_at
-            ? (int) $this->partida->started_at->diffInSeconds(now())
-            : 0;
-
-        // Cálculo de pontuação
-        $base = match ($this->partida->dificuldade) {
-            'facil'  => 100,
-            'medio'  => 250,
-            'dificil' => 500,
-            default  => 100,
-        };
-
-        $bonusPrecisao = $tirosDados > 0
-            ? (int) round(($acertos / $tirosDados) * 200)
-            : 0;
-
-        // Bônus de tempo: máx 300 pts, decresce com o tempo (1 pt perdido a cada 10s)
-        $bonusTempo = max(0, 300 - (int) floor($tempo / 10));
-
-        $bonusVitoria = $venceu ? 300 : 0;
-
-        $pontuacao = $base + $bonusPrecisao + $bonusTempo + $bonusVitoria;
-
-        \App\Models\Ranking::create([
-            'user_id'         => Auth::id(),
-            'partida_id'      => $this->partida->id,
-            'venceu'          => $venceu,
-            'dificuldade'     => $this->partida->dificuldade,
-            'tiros_dados'     => $tirosDados,
-            'acertos'         => $acertos,
-            'navios_afundados' => $naviosAfundados,
-            'tempo_segundos'  => $tempo,
-            'pontuacao'       => $pontuacao,
-        ]);
+{
+    $queryInimigo = Tabuleiro::where('partida_id', $this->partida->id);
+    if ($this->partida->eMultiplayer()) {
+        $queryInimigo->where('user_id', '!=', Auth::id());
+    } else {
+        $queryInimigo->whereNull('user_id');
     }
+    $tabuleiroAlvo = $queryInimigo->first();
+
+    $tirosDados      = $tabuleiroAlvo->tiros()->count();
+    $acertos         = $tabuleiroAlvo->tiros()->where('foi_atingido', true)->count();
+    $naviosAfundados = $tabuleiroAlvo->tiros()->where('navio_afundado', true)->count();
+    $tempo           = $this->partida->started_at
+        ? (int) $this->partida->started_at->diffInSeconds(now())
+        : 0;
+
+    $base = match ($this->partida->dificuldade) {
+        'facil'   => 100,
+        'medio'   => 250,
+        'dificil' => 500,
+        default   => 200,
+    };
+
+    $bonusPrecisao = $tirosDados > 0 ? (int) round(($acertos / $tirosDados) * 200) : 0;
+    $bonusTempo    = max(0, 300 - (int) floor($tempo / 10));
+    $bonusVitoria  = $venceu ? 300 : 0;
+
+    $ranking = Ranking::updateOrCreate(
+        ['user_id' => Auth::id(), 'partida_id' => $this->partida->id],
+        [
+            'venceu'           => $venceu,
+            'dificuldade'      => $this->partida->dificuldade ?? 'medio',
+            'tiros_dados'      => $tirosDados,
+            'acertos'          => $acertos,
+            'navios_afundados' => $naviosAfundados,
+            'tempo_segundos'   => $tempo,
+            'pontuacao'        => $base + $bonusPrecisao + $bonusTempo + $bonusVitoria,
+        ]
+    );
+
+    // ── NOVO: avalia e concede medalhas ──
+    (new MedalhaService())->avaliarEConceder(Auth::id(), $this->partida, $ranking);
+}
 }

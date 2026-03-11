@@ -1,113 +1,220 @@
 <x-app-layout>
-<div class="min-h-screen bg-[#0a0f14] text-white py-12 px-4">
-    <div class="max-w-5xl mx-auto flex flex-col gap-12">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-        {{-- Header --}}
-        <div class="text-center">
-            <span class="material-symbols-outlined text-6xl text-yellow-400">military_tech</span>
-            <h1 class="text-4xl font-black uppercase italic tracking-tighter mt-2">Ranking Naval</h1>
-            <p class="text-white/40 text-sm mt-1">Os melhores almirantes dos sete mares</p>
-        </div>
+    <div class="min-h-screen bg-[#020617] text-white font-sans">
 
-        {{-- Ranking Global --}}
-        <section>
-            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-[#137fec] mb-4">🌍 Ranking Global</h2>
-            <div class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-widest">
-                            <th class="text-left p-4">#</th>
-                            <th class="text-left p-4">Jogador</th>
-                            <th class="text-right p-4">Melhor Pontuação</th>
-                            <th class="text-right p-4">Partidas</th>
-                            <th class="text-right p-4">Vitórias</th>
-                            <th class="text-right p-4">Precisão Média</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($global as $i => $entry)
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors
-                                   {{ $entry->user_id === auth()->id() ? 'bg-[#137fec]/10' : '' }}">
-                            <td class="p-4 font-black text-lg
-                                {{ $i === 0 ? 'text-yellow-400' : ($i === 1 ? 'text-slate-300' : ($i === 2 ? 'text-amber-600' : 'text-white/30')) }}">
-                                {{ $i === 0 ? '🥇' : ($i === 1 ? '🥈' : ($i === 2 ? '🥉' : '#'.($i+1))) }}
-                            </td>
-                            <td class="p-4 font-bold">
-                                {{ $entry->user->name }}
-                                @if($entry->user_id === auth()->id())
-                                    <span class="ml-2 text-[10px] bg-[#137fec]/20 text-[#137fec] px-2 py-0.5 rounded-full uppercase tracking-widest">Você</span>
-                                @endif
-                            </td>
-                            <td class="p-4 text-right font-black text-yellow-400">{{ number_format($entry->melhor_pontuacao) }}</td>
-                            <td class="p-4 text-right text-white/60">{{ $entry->total_partidas }}</td>
-                            <td class="p-4 text-right text-emerald-400">{{ $entry->vitorias }}</td>
-                            <td class="p-4 text-right text-[#137fec]">{{ $entry->precisao_media }}%</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="6" class="p-8 text-center text-white/30">Nenhuma partida registrada ainda.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        {{-- HERO --}}
+        <section class="relative pt-14 pb-10 overflow-hidden">
+            <div class="absolute inset-0 bg-[linear-gradient(rgba(37,99,235,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.04)_1px,transparent_1px)] bg-[size:60px_60px] pointer-events-none"></div>
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-6 relative z-10">
+                <div class="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
+                    <div>
+                        <p class="text-blue-500 font-black uppercase tracking-[0.4em] text-xs mb-3">Competição Global</p>
+                        <h1 class="text-5xl md:text-7xl font-[1000] italic uppercase tracking-tighter leading-[0.85]">
+                            HALL DOS <br><span class="text-blue-500">ALMIRANTES</span>
+                        </h1>
+                        <div class="h-1 w-20 bg-blue-600 mt-4"></div>
+                    </div>
+
+                    {{-- Stats do jogador logado --}}
+                    @if($minhaPosicao)
+                    <div class="bg-slate-900/80 border border-blue-500/30 rounded-2xl px-8 py-5 flex items-center gap-6 shrink-0">
+                        <div class="text-center">
+                            <p class="text-4xl font-[1000] italic text-blue-500">#{{ $minhaPosicao }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Sua Posição</p>
+                        </div>
+                        <div class="w-px h-12 bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="text-4xl font-[1000] italic text-white">{{ $minhasPrecisao ?? 0 }}%</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Sua Precisão</p>
+                        </div>
+                        <div class="w-px h-12 bg-white/10"></div>
+                        <div class="text-center">
+                            <p class="text-4xl font-[1000] italic text-yellow-500">{{ $minhasMedalhas }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mt-1">Medalhas</p>
+                        </div>
+                    </div>
+                    @endif
+                </div>
             </div>
         </section>
 
-        {{-- Ranking Pessoal --}}
-        <section>
-            <h2 class="text-xs font-black uppercase tracking-[0.3em] text-[#137fec] mb-4">🎯 Minhas Partidas</h2>
-            <div class="rounded-3xl border border-white/10 bg-white/5 overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-white/10 text-white/40 text-xs uppercase tracking-widest">
-                            <th class="text-left p-4">Resultado</th>
-                            <th class="text-left p-4">Dificuldade</th>
-                            <th class="text-right p-4">Pontuação</th>
-                            <th class="text-right p-4">Precisão</th>
-                            <th class="text-right p-4">Tiros</th>
-                            <th class="text-right p-4">Tempo</th>
-                            <th class="text-right p-4">Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($pessoal as $entry)
-                        <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
-                            <td class="p-4">
-                                @if($entry->venceu)
-                                    <span class="text-emerald-400 font-bold flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-base">check_circle</span> Vitória
+        {{-- PÓDIO TOP 3 --}}
+        @if($ranking->count() >= 3)
+        <section class="max-w-3xl mx-auto px-6 pb-10">
+            <div class="grid grid-cols-3 gap-4 items-end">
+
+                {{-- 2º lugar --}}
+                <div class="flex flex-col items-center">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-slate-600 flex items-center justify-center font-black text-slate-300 text-2xl uppercase mb-3">
+                        {{ substr($ranking[1]->user->name, 0, 1) }}
+                    </div>
+                    <p class="font-black italic uppercase text-sm tracking-tight mb-0.5 text-center truncate max-w-[100px]">{{ $ranking[1]->user->name }}</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{{ number_format($ranking[1]->pontuacao_total) }} pts</p>
+                    <div class="w-full bg-slate-800 border border-slate-600 rounded-t-2xl py-6 text-center">
+                        <p class="text-5xl font-[1000] italic text-slate-400">#2</p>
+                    </div>
+                </div>
+
+                {{-- 1º lugar --}}
+                <div class="flex flex-col items-center -mt-8">
+                    <div class="relative mb-3">
+                        <span class="material-symbols-outlined text-yellow-500 text-3xl absolute -top-4 left-1/2 -translate-x-1/2 font-bold">emoji_events</span>
+                        <div class="w-[72px] h-[72px] rounded-2xl bg-yellow-500/10 border-2 border-yellow-500/50 flex items-center justify-center font-black text-yellow-400 text-3xl uppercase mt-4">
+                            {{ substr($ranking[0]->user->name, 0, 1) }}
+                        </div>
+                    </div>
+                    <p class="font-black italic uppercase tracking-tight mb-0.5 text-center truncate max-w-[110px]">{{ $ranking[0]->user->name }}</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-yellow-500/70 mb-3">{{ number_format($ranking[0]->pontuacao_total) }} pts</p>
+                    <div class="w-full bg-yellow-500/10 border border-yellow-500/30 rounded-t-2xl py-10 text-center shadow-[0_0_40px_rgba(234,179,8,0.1)]">
+                        <p class="text-6xl font-[1000] italic text-yellow-500">#1</p>
+                    </div>
+                </div>
+
+                {{-- 3º lugar --}}
+                <div class="flex flex-col items-center">
+                    <div class="w-14 h-14 rounded-2xl bg-slate-800 border-2 border-orange-700/40 flex items-center justify-center font-black text-orange-400/70 text-2xl uppercase mb-3">
+                        {{ substr($ranking[2]->user->name, 0, 1) }}
+                    </div>
+                    <p class="font-black italic uppercase text-sm tracking-tight mb-0.5 text-center truncate max-w-[100px]">{{ $ranking[2]->user->name }}</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{{ number_format($ranking[2]->pontuacao_total) }} pts</p>
+                    <div class="w-full bg-slate-800/60 border border-orange-700/20 rounded-t-2xl py-4 text-center">
+                        <p class="text-4xl font-[1000] italic text-orange-600/70">#3</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        @endif
+
+        {{-- TABELA COMPLETA --}}
+        <section class="max-w-7xl mx-auto px-6 pb-16">
+
+            {{-- Filtros --}}
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-xl font-[1000] italic uppercase tracking-tighter">Ranking <span class="text-blue-500">Completo</span></h2>
+                    <div class="h-0.5 w-12 bg-blue-600 mt-2"></div>
+                </div>
+                <div class="flex gap-2">
+                    @foreach(['geral' => 'Geral', 'mensal' => 'Mensal', 'semanal' => 'Semanal'] as $key => $label)
+                    <a href="{{ route('ranking.index', ['filtro' => $key]) }}"
+                       class="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                              {{ $filtro === $key ? 'bg-blue-600 text-white shadow-[0_4px_0_rgb(30,58,138)]' : 'bg-slate-900 border border-white/5 text-slate-400 hover:text-white' }}">
+                        {{ $label }}
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="bg-slate-950/50 border border-white/5 rounded-[2rem] overflow-hidden">
+
+                @if($ranking->isEmpty())
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <span class="material-symbols-outlined text-6xl text-slate-800 font-bold mb-4">anchor</span>
+                    <p class="text-slate-600 font-black italic uppercase text-sm">Nenhuma batalha registrada.</p>
+                </div>
+                @else
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[640px]">
+                        <thead>
+                            <tr class="bg-slate-950 border-b border-white/10 uppercase font-black italic text-[10px] tracking-widest text-slate-500">
+                                <th class="px-8 py-5">Posição</th>
+                                <th class="px-8 py-5">Comandante</th>
+                                <th class="px-8 py-5 text-center">Pontuação</th>
+                                <th class="px-8 py-5 text-center">V / D</th>
+                                <th class="px-8 py-5 text-center">Medalhas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            @foreach($ranking as $i => $player)
+                            <tr class="group hover:bg-blue-600/5 transition-colors {{ Auth::id() === $player->user_id ? 'bg-blue-600/10 border-l-2 border-blue-500' : '' }}">
+
+                                {{-- Posição --}}
+                                <td class="px-8 py-5">
+                                    @if($i === 0)
+                                        <span class="text-2xl font-[1000] italic text-yellow-500">#1</span>
+                                    @elseif($i === 1)
+                                        <span class="text-2xl font-[1000] italic text-slate-400">#2</span>
+                                    @elseif($i === 2)
+                                        <span class="text-2xl font-[1000] italic text-orange-600">#3</span>
+                                    @else
+                                        <span class="text-lg font-[1000] italic text-slate-600">#{{ $i + 1 }}</span>
+                                    @endif
+                                </td>
+
+                                {{-- Nome --}}
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-slate-800 border border-white/10 flex items-center justify-center font-black text-blue-500 uppercase text-sm shrink-0">
+                                            {{ substr($player->user->name, 0, 1) }}
+                                        </div>
+                                        <div>
+                                            <p class="font-black italic uppercase tracking-tight text-white group-hover:text-blue-400 transition-colors text-sm">
+                                                {{ $player->user->name }}
+                                                @if(Auth::id() === $player->user_id)
+                                                    <span class="ml-2 text-[9px] bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded-full uppercase tracking-widest font-black">Você</span>
+                                                @endif
+                                            </p>
+                                            <p class="text-[10px] text-slate-600 font-bold uppercase">{{ $player->total_partidas }} partidas</p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                {{-- Pontuação --}}
+                                <td class="px-8 py-5 text-center">
+                                    <span class="font-[1000] italic text-lg text-blue-400">{{ number_format($player->pontuacao_total) }}</span>
+                                </td>
+
+                                {{-- V/D --}}
+                                <td class="px-8 py-5 text-center">
+                                    <span class="font-black italic text-sm">
+                                        <span class="text-white">{{ $player->vitorias }}</span>
+                                        <span class="text-slate-600 mx-1">/</span>
+                                        <span class="text-slate-500">{{ $player->derrotas }}</span>
                                     </span>
-                                @else
-                                    <span class="text-red-500 font-bold flex items-center gap-1">
-                                        <span class="material-symbols-outlined text-base">cancel</span> Derrota
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="p-4">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold uppercase
-                                    {{ $entry->dificuldade === 'facil' ? 'bg-emerald-500/20 text-emerald-400' :
-                                       ($entry->dificuldade === 'medio' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400') }}">
-                                    {{ ucfirst($entry->dificuldade) }}
-                                </span>
-                            </td>
-                            <td class="p-4 text-right font-black text-yellow-400">{{ number_format($entry->pontuacao) }}</td>
-                            <td class="p-4 text-right text-[#137fec]">{{ $entry->precisao }}%</td>
-                            <td class="p-4 text-right text-white/60">{{ $entry->tiros_dados }}</td>
-                            <td class="p-4 text-right text-white/60">{{ gmdate('i:s', $entry->tempo_segundos) }}</td>
-                            <td class="p-4 text-right text-white/40 text-xs">{{ $entry->created_at->format('d/m/Y') }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="7" class="p-8 text-center text-white/30">Você ainda não jogou nenhuma partida.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                </td>
+
+                                {{-- Medalhas --}}
+                                <td class="px-8 py-5 text-center">
+                                    <div class="flex justify-center gap-1 items-center">
+                                        @forelse($player->tipos_medalhas ?? [] as $tipo)
+                                            @php
+                                                $labels = [
+                                                    'almirante'          => 'Almirante',
+                                                    'capitao_mar_guerra' => 'Capitão de Mar e Guerra',
+                                                    'capitao'            => 'Capitão',
+                                                    'marinheiro'         => 'Marinheiro',
+                                                ];
+                                            @endphp
+                                            <div class="relative group/medal">
+                                                <span class="material-symbols-outlined text-yellow-500 text-sm font-bold cursor-default">military_tech</span>
+                                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-slate-800 border border-white/10 rounded-xl
+                                                            text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap
+                                                            opacity-0 group-hover/medal:opacity-100 pointer-events-none transition-opacity z-50">
+                                                    {{ $labels[$tipo] ?? $tipo }}
+                                                </div>
+                                            </div>
+                                        @empty
+                                            <span class="text-slate-700 text-[10px] font-black">—</span>
+                                        @endforelse
+                                        @if(($player->total_medalhas ?? 0) > count($player->tipos_medalhas ?? []))
+                                            <span class="text-[10px] font-black text-slate-500">+{{ $player->total_medalhas - count($player->tipos_medalhas) }}</span>
+                                        @endif
+                                    </div>
+                                </td>
+
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+
             </div>
         </section>
 
-        <div class="text-center">
-            <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-white/40 hover:text-white transition-colors text-sm">
-                <span class="material-symbols-outlined text-base">arrow_back</span>
-                Voltar ao menu
-            </a>
-        </div>
     </div>
-</div>
 </x-app-layout>
