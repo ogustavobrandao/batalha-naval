@@ -16,7 +16,7 @@ services:
     depends_on:
       - db
 
-  web:
+  nginx:
     image: nginx:alpine
     container_name: laravel_nginx
     restart: unless-stopped
@@ -55,6 +55,16 @@ services:
       - laravel_network
     profiles:
       - build
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - laravel_network
+    restart: unless-stopped
 
 networks:
   laravel_network:

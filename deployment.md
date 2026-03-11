@@ -3,7 +3,7 @@
 This document outlines the steps to deploy the Laravel application using the provided Docker infrastructure.
 
 ## Infrastructure Overview
-- **Nginx (web)**: Serves static files and proxies PHP requests to PHP-FPM. (Port 80)
+- **Nginx (nginx)**: Serves static files and proxies PHP requests to PHP-FPM. (Port 80)
 - **PHP-FPM (app)**: Runs the Laravel application and artisan commands.
 - **PostgreSQL (db)**: Houses the relational database.
 - **Node (node)**: Compiles frontend assets using Vite.
@@ -25,6 +25,32 @@ This document outlines the steps to deploy the Laravel application using the pro
 
 2. **Accessing the Application**
    The application should now be available at `http://localhost:8080`.
+
+## Cloudflare Tunnel Setup
+
+To expose the application publicly using Cloudflare Tunnel (e.g., at `https://genildoburgos.tech`), follow these steps:
+
+1. **Create a tunnel in Cloudflare:**
+   ```bash
+   cloudflared tunnel create laravel-app
+   ```
+
+2. **Associate the tunnel with the domain:** Navigate to your Cloudflare dashboard and map `genildoburgos.tech` to `http://nginx:80` inside the tunnel configuration.
+
+3. **Obtain the tunnel token** from the Cloudflare dashboard.
+
+4. **Add the token to your `.env` file:**
+   ```env
+   CLOUDFLARE_TUNNEL_TOKEN=your_token_here
+   ```
+
+5. **Restart the infrastructure:**
+   ```bash
+   make rebuild
+   make start
+   ```
+
+After these steps, the `cloudflared` container will securely route traffic from Cloudflare into the internal Docker network, making the Laravel application accessible at `https://genildoburgos.tech`.
 
 ## Common Commands
 
